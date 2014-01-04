@@ -1,0 +1,404 @@
+\section{Mise en œuvre d'IPv6}
+
+Afin d'illustrer ce projet par une démonstration technique, un routeur \emph{Cisco 1811} nous a été prêté. L'objectif est de créer deux réseaux et de faire basculer un client d'un réseau à un autre, tout en restant joignable sur son adresse IPv6 d'origine.
+
+\subsection{Installation}
+
+Afin de permettre à tous de travailler sur le routeur, il a été installé de manière fixe chez Émilien et relié à une \emph{Freebox v6}.
+Cette Freebox dispose d'une connexion IPv6 par défaut et chaque abonné dispose de 8 sous-réseaux \texttt{/64}.
+
+Les branchements sont les suivants :
+\begin{center}
+    \begin{tabular}{|l|l|}
+    \hline
+    Port                   & Connecté à \\ \hline
+    FastEthernet 0 (WAN)   & Freebox    \\ \hline
+    FastEthernet 1 (WAN)   & n.c.       \\ \hline
+    FastEthernet 2-8 (LAN) & Clients    \\ \hline
+    \end{tabular}
+\end{center}
+
+On commence la configuration du routeur en se connectant sur le port console. On commence donc par lui attribuer un nom et un domaine :
+
+\begin{lstlisting}
+router(config)#hostname router
+router(config)#ip domain-name emilienkenler.net
+\end{lstlisting}
+
+On peut ensuite activer le SSH :
+
+\begin{lstlisting}
+router(config)#ip ssh rsa keypair-name sshkey
+router(config)#crypto key generate rsa usage-keys label sshkeys \
+               modulus 2048
+router(config)#ip ssh version 1
+router(config)#ip ssh logging events
+router(config)#ip ssh time-out 60
+router(config)#ip ssh authentication-retries 5
+router(config)#service password-encryption
+router(config)#enable secret sr04
+router(config)#username sr04 password 0 sr04
+router(config)#line vty 0 4
+router(config-line)#login local
+router(config-line)#transport input ssh
+\end{lstlisting}
+
+On définit ensuite la Freebox comme route par défaut en IPv4 :
+\begin{lstlisting}
+router(config)#ip route 0.0.0.0 0.0.0.0 192.168.1.254
+\end{lstlisting}
+
+On active enfin l’IPv6 sur l’interface raccordée à la Freebox ainsi que l’auto-configuration, dans le but de récupérer une adresse IPv6 dans le réseau géré par la Freebox :
+
+\begin{lstlisting}
+router(config)#ipv6 unicast-routing 
+router(config)#int FastEthernet 0
+router(config-if)#ipv6 enable
+router(config-if)#ipv6 address autoconfig default
+router#show ipv6 route
+S   ::/0 [2/0]
+     via FE80::224:D4FF:FE9A:18E0, FastEthernet0
+\end{lstlisting}
+
+On peut ensuite récupérer l'adresse IPv6 utilisée par le routeur :
+\begin{lstlisting}
+router#sh ipv6 interface FastEthernet 0
+  IPv6 is enabled, link-local address is FE80::5A8D:9FF:FE14:8900 
+  No Virtual link-local address(es):
+  Stateless address autoconfig enabled
+  Global unicast address(es):
+    2A01:E35:8A38:6870:5A8D:9FF:FE14:8900, subnet is 2A01:E35:8A38:6870::/64 [EUI/CAL/PRE]
+      valid lifetime 86004 preferred lifetime 86004
+    2A01:E35:8A38:6875:5A8D:9FF:FE14:8900, subnet is 2A01:E35:8A38:6875::/64 [EUI]
+  Joined group address(es):
+    FF02::1
+    FF02::2
+    FF02::1:FF14:8900
+  MTU is 1500 bytes
+  ICMP error messages limited to one every 100 milliseconds
+  ICMP redirects are enabled
+  ICMP unreachables are sent
+  ND DAD is enabled, number of DAD attempts: 1
+  ND reachable time is 30000 milliseconds (using 18502)
+  ND advertised reachable time is 0 (unspecified)
+  ND advertised retransmit interval is 0 (unspecified)
+  ND router advertisements are sent every 200 seconds
+  ND router advertisements live for 1800 seconds
+  ND advertised default router preference is Medium
+  Hosts use stateless autoconfig for addresses.
+\end{lstlisting}
+
+L'adresse du routeur est donc \texttt{2a01:e35:8a38:6870:5a8d:9ff:fe14:8900}.
+Pour éviter de devoir taper cette adresse à chaque connexion, on créé une entrée DNS\footnote{\emph{Domain Name System}} de type \texttt{AAAA} avec le nom \texttt{router.emilienkenler.net} :
+
+\begin{lstlisting}
+router.emilienkenler.net. 1651  IN      AAAA    2a01:e35:8a38:6870:5a8d:9ff:fe14:8900
+\end{lstlisting}
+
+Au sein de l'interface de la \emph{Freebox v6}, il est possible de demander le routage de certains réseau vers une adresse qui se trouve derrière la \emph{Freebox}.
+Le routeur est alors appelé le \emph{Next Hop} : c'est le point de passage suivant pour tous les paquets adressés à ce sous-réseau.
+Ceci va nous permettre d'accéder à chacun des réseaux que nous utilisons pour la démonstration depuis n'importe quel endroit sur Internet.
+
+Dans notre cas, le réseau par défaut de la \emph{Freebox} est \texttt{2a01:e35:8a38:6870::/64}.
+Dans l'interface de la Freebox, on accède donc au menu \emph{Paramètres de la freebox} > \emph{Mode avancé} > \emph{Configuration IPv6}, puis on configure les 4 sous-réseaux qui seront utilisés par le projet pour les faire pointer vers le routeur :
+
+\begin{center}
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    ID du sous-réseau & Adresse du sous-réseau           & Description                          & Interface \\ \hline
+    2                 & \texttt{2a01:e35:8a38:6872::/64} & Réseau domicile                      & VLAN2     \\ \hline
+    3                 & \texttt{2a01:e35:8a38:6873::/64} & Réseau mobile                        & VLAN3     \\ \hline
+    4                 & \texttt{2a01:e35:8a38:6874::/64} & \emph{Réservé Wi-Fi}                       & -         \\ \hline
+    5                 & \texttt{2a01:e35:8a38:6875::/64} & Réseau extérieur & WAN       \\ \hline
+    \end{tabular}
+\end{center}
+
+% screenshot de la freebox
+
+La configuration initiale est maintenant terminée et on peut débrancher la console.
+
+Nous n'avons pas réussi à nous connecter avec la version 2 du protocole SSH.
+La version est donc forcée à 1 dans la configuration du routeur et il faut se connecter avec la commande suivante :
+
+\begin{lstlisting}
+$ ssh -6 -1 sr04@router.emilienkenler.net
+\end{lstlisting}
+
+\subsection{Auto-configuration IPv6}
+
+On utilise le sous-réseau \texttt{2a01:e35:8a38:6875::/64} pour tester la mise en place de l'auto-configuration au niveau du routeur.
+Ce réseau est configuré sur l'interface WAN du routeur.
+Comme ce sous-réseau a été délégué au routeur dans la configuration de la Freebox, l'auto-configuration est désactivée de son côté.
+En activant l'auto-configuration du côté du routeur, tout périphérique connecté du côté WAN (par l'intermédiaire du switch de la Freebox), pourra négocier une adresse IPv6 avec le routeur.
+
+On active la configuration comme suit :
+
+\begin{lstlisting}
+router(config)#int FastEthernet 0
+router(config-if)#ipv6 enable
+router(config-if)#ipv6 address 2a01:e35:8a38:6875::/64 eui-64
+router(config-if)#ipv6 nd prefix 2a01:e35:8a38:6875::/64
+\end{lstlisting}
+
+Pour vérifier que cela fonctionne, on peut déjà vérifier que le routeur a obtenu automatiquement une adresse sur son interface WAN :
+\begin{lstlisting}
+router#sh ipv6 interface FastEthernet 0
+FastEthernet0 is up, line protocol is up
+  IPv6 is enabled, link-local address is FE80::5A8D:9FF:FE14:8900 
+  No Virtual link-local address(es):
+  Global unicast address(es):
+    2A01:E35:8A38:6870:5A8D:9FF:FE14:8900, subnet is 2A01:E35:8A38:6870::/64
+    2A01:E35:8A38:6875:5A8D:9FF:FE14:8900, subnet is 2A01:E35:8A38:6875::/64 [EUI]
+\end{lstlisting}
+
+\subsection{Configuration des VLAN}
+
+Afin de séparer les réseaux domicile et mobile entre les différents ports du switch, on créé différents VLAN.
+
+Le VLAN2 est utilisé pour le réseau domicile.
+On le rend accessible sur les ports 2 et 3 du switch :
+
+\begin{lstlisting}
+router(config)#vlan 2
+router(config-vlan)#name VLAN2
+
+router(config)#interface FastEthernet 2
+router(config-if)#switchport mode access
+router(config-if)#switchport access vlan 2
+
+router(config)#interface fastEthernet 3
+router(config-if)#switchport mode access
+router(config-if)#switchport access vlan 2
+\end{lstlisting}
+
+On indique ensuite l'adresse du sous-réseau au routeur et on active l'auto-configuration :
+
+\begin{lstlisting}
+router(config)#interface vlan 2
+router(config-if)#ipv6 enable                              
+router(config-if)#ipv6 address 2a01:e35:8a38:6872::/64 eui-64
+router(config-if)#ipv6 nd ra interval 20
+router(config-if)#ipv6 nd advertisement-interval
+router(config-if)#ipv6 nd prefix 2a01:e35:8a38:6872::/64
+\end{lstlisting}
+
+La même configuration est appliquée pour le VLAN3, qui est utilisé pour le réseau mobile sur les ports 4 et 5 :
+
+\begin{lstlisting}
+router(config)#vlan 3
+router(config-vlan)#name VLAN3
+
+router(config)#interface FastEthernet 4
+router(config-if)#switchport mode access
+router(config-if)#switchport access vlan 3
+
+router(config)#interface FastEthernet 5
+router(config-if)#switchport mode access
+router(config-if)#switchport access vlan 3
+
+router(config)#interface vlan 3
+router(config-if)#ipv6 enable       
+router(config-if)#ipv6 address 2a01:e35:8a38:6873::/64 eui-64
+router(config-if)#ipv6 nd ra interval 20
+router(config-if)#ipv6 nd advertisement-interval
+router(config-if)#ipv6 nd prefix 2a01:e35:8a38:6873::/64
+\end{lstlisting}
+
+\subsection{Configuration du Wi-Fi}
+
+Nous souhaitions initialement réaliser une démonstration consistant à passer un client d'une connexion filaire à une connexion Wi-Fi.
+La conservation de la même IP devrait alors permettre de faire cette bascule sans interruption des connexions.
+
+Cependant, l'interface Wi-Fi du routeur dont nous disposons fonctionne en mode bridge avec une autre interface et les bridge ne supportent pas l'IPv6.
+Il n'est donc pas possible de faire de l'IPv6 en Wi-Fi avec ce routeur.
+
+La configuration du Wi-Fi été abandonnée.
+La configuration du Wi-Fi en IPv4 est disponible en annexe à titre de référence.
+
+\subsection{Configuration de Mobile IPv6 sur le routeur}
+
+Afin que les clients puissent utiliser Mobile IPv6 sur les réseaux VLAN2 et VLAN3, on configure le routeur comme un \emph{Home Agent} :
+
+\begin{lstlisting}
+router(config)#interface vlan 2
+router(config-if)#ipv6 mobile home-agent
+router(config)#interface vlan 3
+router(config-if)#ipv6 mobile home-agent
+\end{lstlisting}
+
+On peut alors afficher des détails sur l'état de cette fonctionnalité :
+
+\begin{itemize}
+
+\item les informations générales :
+\begin{lstlisting}
+router#sh ipv6 mobile globals
+Mobile IPv6 Global Settings:
+
+  3 Home Agent service on following interfaces:
+    FastEthernet0
+    Vlan2
+    Vlan3
+  Features:
+    Auth-option support disabled
+  Bindings:
+    Maximum number is unlimited.
+    0 bindings are in use
+    1 bindings peak
+    Binding lifetime permitted is 262140 seconds
+    Recommended refresh time is 300 
+\end{lstlisting}
+
+\item les détails relatifs à chaque interface :
+\begin{lstlisting}
+router#sh ipv6 mobile home-agent
+Home Agent information for Vlan2
+  Configured:
+    FE80::5A8D:9FF:FE14:8900
+    preference 0 lifetime 1800
+      global address 2A01:E35:8A38:6872:5A8D:9FF:FE14:8900/64
+
+  No Discovered Home Agents
+Home Agent information for Vlan3
+  Configured:
+    FE80::5A8D:9FF:FE14:8900
+    preference 0 lifetime 1800
+      global address 2A01:E35:8A38:6873:5A8D:9FF:FE14:8900/64
+
+  No Discovered Home Agents
+\end{lstlisting}
+
+\item la liste des machines connectées
+\begin{lstlisting}
+router#sh ipv6 mobile binding 
+Mobile IPv6 Binding Cache Entries:
+
+Selection matched 0 bindings
+\end{lstlisting}
+
+\item des détails sur le traffic
+\begin{lstlisting}
+router#sh ipv6 mobile traffic
+MIPv6 statistics:
+  Rcvd:  111 total
+      0 truncated, 0 format errors
+      0 checksum errors
+    Binding Updates received: 109
+      0 no HA option, 0 BU's length
+      0 options' length, 0 invalid CoA
+  Sent:  174 generated
+    Binding Acknowledgements sent: 109
+      107 accepted (0 prefix discovery required)
+      0 reason unspecified, 0 admin prohibited
+      0 insufficient resources, 0 home reg not supported
+      0 not home subnet, 2 not home agent for node
+      0 DAD failed, 0 sequence number
+    Binding Errors sent: 65
+      63 no binding, 2 unknown MH
+
+  Home Agent Traffic:
+    98 registrations, 9 deregistrations
+    2w1d since last accepted HA registration
+    2w1d since last failed HA registration
+    133 last failed registration code
+    Traffic forwarded:
+      0 tunneled, 0 reversed tunneled
+    Dynamic Home Agent Address Discovery:
+      0 requests received, 0 replies sent
+    Mobile Prefix Discovery:
+      2036 solicitations received, 2036 advertisements sent\end{lstlisting}
+\end{itemize}
+
+En cas de besoin, on peut activer l'affichage de messages supplémentaires dans les journaux relatifs à cette fonctionnalité :
+
+\begin{lstlisting}
+router#debug ipv6 mobile AR-selection
+router#debug ipv6 mobile binding-cache
+router#debug ipv6 mobile forwarding 
+router#debug ipv6 mobile home-agent   
+router#debug ipv6 mobile networks    
+router#debug ipv6 mobile registrations      
+router#debug ipv6 mobile router 
+\end{lstlisting}
+
+\subsection{Configuration du client}
+
+On souhaite configurer le client en tant que \emph{Mobile Node}.
+
+Il existe plusieurs implémentations d'IPv6 sous Linux.
+Nous avons choisi \emph{UMIP} \footnote{Universal Mobile IP for Linux, \url{http://www.umip.org/}}, qui est une implementation de la RFC6275\footnote{\url{http://tools.ietf.org/html/rfc6275}}.
+Une autre alternative est \emph{MIPL} \footnote{Mobile IPv6 for Linux}, dont une documentation est encore disponible \footnote{\url{http://tldp.org/HOWTO/Mobile-IPv6-HOWTO/mipv6.html}}, mais dont le site n'est plus accessible.
+
+UMIP nécessite le support du noyau pour pouvoir fonctionner. Sous Fedora, ce support est disponible nativement et le paquet \texttt{mipv6-daemon} est disponible pour l'exploiter.
+
+\begin{lstlisting}
+# yum install mipv6-daemon
+\end{lstlisting}
+
+On peut alors créer le fichier de configuration \texttt{/etc/mip6d.conf}, qui spécifie que le démon doit agir en tant que \emph{Mobile Node} (MN), ainsi que l'adresse du réseau domicile et du \emph{Home Agent} (c'est-à-dire le routeur) :
+
+\begin{lstlisting}
+NodeConfig MN;
+DebugLevel 10;
+OptimisticHandoff enabled;
+DoRouteOptimizationMN disabled;
+MnMaxHaBindingLife 60;
+
+Interface "em1" {
+  MnIfPreference 1;
+}
+
+MnHomeLink "em1" {
+  HomeAgentAddress 2A01:E35:8A38:6872:5A8D:9FF:FE14:8900;
+  HomeAddress 2A01:E35:8A38:6872::1/64;
+}
+\end{lstlisting}
+
+On peut ensuite redémarrer le démon pour prendre en compte cette configuration :
+
+\begin{lstlisting}
+# systemctl restart mip6d.service
+\end{lstlisting}
+
+\subsection{Analyse du traffic}
+
+Maintenant que tout est configuré, on peut réaliser la démonstration.
+L'objectif est de connecter un client dans le réseau domicile, puis de le connecter dans le réseau mobile et de vérifier qu'il est toujours joignable sur son adresse d'origine.
+Pour vérifier cela, on utilisera un tiers qui envoie des \texttt{ping} vers l'adresse dans le réseau domicile.
+Le tiers pourra se trouver dans un réseau quelconque.
+
+\begin{warning}
+Une première remarque importante à faire concerne la gestion de l'état des interfaces VLAN par le routeur.
+
+Conformément à une note sur le site de Cisco\footnote{\url{https://supportforums.cisco.com/docs/DOC-2032}}, une interface VLAN n'est disponible que si au moins un périphérique est connecté à une interface dans ce VLAN.
+
+Ainsi, si le client mobile de test est le seul périphérique connecté au switch et qu'on le branche sur un port du VLAN mobile, les ports 2 et 3 ne sont pas connectés.
+Le switch va alors désactiver le VLAN2 et passer l'interface à l'état \texttt{up/down} au lieu de \texttt{up/up}.
+
+Si on regarde l'état du Mobile IPv6 sur le routeur dans ces conditions, on constate effectivement qu'aucune adresse n'est détectée sur l'interface VLAN2 :
+\begin{lstlisting}
+router#sh ipv6 mobile home-agent
+Home Agent information for Vlan2
+  Configured:
+    FE80::5A8D:9FF:FE14:8900
+    preference 0 lifetime 1800
+      No global addresses within prefix
+
+  No Discovered Home Agents
+Home Agent information for Vlan3
+  Configured:
+    FE80::5A8D:9FF:FE14:8900
+    preference 0 lifetime 1800
+      global address 2A01:E35:8A38:6873:5A8D:9FF:FE14:8900/64
+
+  No Discovered Home Agents
+\end{lstlisting}
+
+Une alternative consiste à utiliser le VLAN dans lequel se trouve la Freebox, mais celle-ci va alors répondre aux trames liées à Mobile IPv6, ce qui perturbe le client.
+
+Il faut donc veiller à laisser un périphérique connecté en permanence dans le réseau domicile.
+\end{warning}
+
+% TODO Descriptif de la capture
+
+\subsection{Sécurisation}

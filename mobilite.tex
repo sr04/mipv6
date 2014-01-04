@@ -1,0 +1,43 @@
+\section{Mobilité IPv6 (MIPv6)}
+
+Le fait que l’IPv6 soit un protocole construit en amont par l’IETF, certains mécanismes pour la mobilité ont directement pu être intégrés dans la conception du protocole.Voyons déjà le problème posé. Pour communiquer avec des serveurs, des connexions sont établies et elles sont liées à l’adresse IP. Le problème lié à la mobilité c’est que l’adresse IP est liée au réseau sur lequel on se trouve, dès lors que l’on va se déplacer on va changer de réseau et obtenir une nouvelle adresse IP, les connexions actives vont donc être perdues car l’adresse IP avec laquelle elles avaient établi les connexions n’est plus joignable.Un mécanisme à donc été mis en place au sein d’IPv6 pour résoudre le problème : il faut autoriser un équipement à garder son adresse IP \textbf{même s’il change de réseau}.Pour cela un équipement est attaché à un réseau, ce sera son \textbf{réseau mère}, qui lui fournira une adresse IP fixe et ce dernier permettra d’assurer la continuité des connexions établies.On parle de \emph{home address} (HoA) pour l’adresse IP fixe liée au réseau mère (\emph{home network}).De plus l’équipement aura toujours une adresse IP variable et temporaire liée à sa localisation et au réseau auquel il est directement connecté, on parle de \emph{care-of address} (CoA).La pierre angulaire de ce système est l’agent mère (HA) situé sur le réseau mère et chargé d’assurer la correspondance entre la HoA et la CoA.
+
+Voici un petit schéma pour résumer et expliciter tout cela :
+
+% d'où viennent ces schémas??
+\scalefig{images/schema1}{.7}{}
+
+On retrouve le nœud correspondant, qui est le serveur à joindre, le réseau mère qui fait la liaison entre les 2 adresses et le réseau étranger où se trouve physiquement notre équipement. La HoA se situe donc sur le réseau mère et la CoA se situe sur le réseau étranger.Voyons maintenant les cas d’utilisations de ce système.
+
+\subsection{Le mobile est dans son réseau mère}
+
+C’est le cas le plus simple, il utilise directement sa \emph{home address} et on a un routage classique pour la communication entre le mobile et le serveur.
+
+\scalefig{images/schema2}{.7}{}
+
+\subsection{Le mobile est dans un réseau étranger}
+
+C’est là que cela devient intéressant, le mobile aura donc sa HoA et une adresse étrangère CoA acquise par les mécanismes d’auto-configuration sur le réseau étranger où est physiquement le mobile. L’agent mère va donc tenir sa table d’association et associer la HoA avec la CoA. Si le serveur veut envoyer un paquet au mobile il enverra un paquet avec comme source la sienne et comme destination la \emph{home address} du mobile. Une fois arrivé à l’agent mère le paquet va être routé vers la CoA du mobile. Pour cela l’agent mère encapsule le paquet qui a donc comme source l’adresse de l’agent mère et comme destination la CoA du mobile. Une fois arrivé au mobile le paquet est désencapsulé et transmis aux couches supérieurs avec donc comme source et destinations celles du premier paquet. Au yeux du mobile c’est comme s’il était sur son réseau mère, les connexions ne sont donc plus coupées car même si la CoA change, au yeux du mobile la destination est toujours sa HoA qui ne change pas. L’encapsulation se fait grâce à l’extension d’en-tête IP-IP d’IPv6, dès lors les paquets sont protégés par IPsec et tunnelé vers la CoA en toute sécurité.
+
+\scalefig{images/schema3}{.7}{}
+\scalefig{images/schema4}{.7}{}
+
+\subsection{Mécanisme d’association}
+
+Pour créer ou mettre à jour une association au niveau de l’agent mère, lors d’un changement de réseau du mobile par exemple, un mécanisme spécifique de Mobilité IPv6 est utilisé, il s’agit du Binding Update (BU) appelé en français mise à jour d’association. Ce mécanisme utilise un mécanisme du NDP permettant de savoir qu’un hôte n’est plus accessible (a approfondir)
+
+\scalefig{images/schema5}{.7}{}
+
+Un soucis que pose ce mécanisme est une certaines inefficacité et une lenteur au niveau du routage car il faut obligatoirement passé par le réseau mère même si le réseau avec lequel on communique est proche de nous.Un mécanisme d’optimisation du routage à donc été mis en place mais il n’est pas toujours supporté par le serveur avec lequel on communique. Il faut donc garder à l’esprit que la mobilité se fait bien sans cela, il ne s’agit que d’une amélioration, pas d’une obligation.
+
+
+\subsection{Optimisation du routage}
+
+Pour gagner en efficacité dans certains cas, l’optimisation de routage a été mise en place. Le principe est simple et reprend le mécanisme général avec le réseau mère seulement ici le noeud correspondant va aussi faire office d’agent mère car il va tenir une table d’association HoA/CoA. Ainsi par ce biais la on garde le même mécanisme mais l’agent mère devient le noeud correspondant, le mobile envoie donc directement au noeud correspondant (de CoA => CN en surcouche à HoA => CN) qui va enlever l’en-tête et obtenir un paquet allant de HoA à CN, la connexion n’est donc pas brisée.
+
+\scalefig{images/schema6}{.7}{}
+\scalefig{images/schema7}{.7}{}
+
+Il faut aussi dans ce cas faire des Binding Update pour garder à jour les tables d’associations. Le mobile doit donc savoir les agents à qui il doit envoyer ces mises à jour, il a donc une table des agents et lors d’un BU il enverra à son agent mère et au noeud correspondant supportant l’optimisation de routage. Il doit toujours tenir à jour l’agent mère car certaines connexions ne supportent pas l’optimisation suivant le serveur correspondant, il peut donc y avoir à la fois des connexions optimisées et d’autres non optimisées.
+
+\scalefig{images/schema8}{.7}{}
