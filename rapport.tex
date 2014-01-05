@@ -55,7 +55,26 @@
          firstnumber=1,
          numberstyle=\tiny\color{Blue},
          stepnumber=5,
-         extendedchars=false
+         extendedchars=false,
+         breaklines=true
+	 }
+}{\endminipage}
+
+\lstnewenvironment{paquet}[1][]%
+{
+    \noindent
+	\minipage{\linewidth}
+     \lstset{
+         basicstyle=\tiny\ttfamily\color{black},
+         frame=single,
+         showstringspaces=false,
+         tabsize=5,
+         numbers=left,
+         firstnumber=1,
+         numberstyle=\tiny\color{Blue},
+         stepnumber=5,
+         extendedchars=false,
+         breaklines=true
 	 }
 }{\endminipage}
 

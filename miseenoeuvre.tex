@@ -321,6 +321,9 @@ L'objectif est de connecter un client dans le réseau domicile, puis de le conne
 Pour vérifier cela, on utilisera un tiers qui envoie des \texttt{ping} vers l'adresse dans le réseau domicile.
 Le tiers pourra se trouver dans un réseau quelconque.
 
+Les paquets affichés dans ce document sont issus de l'analyse avec \emph{Wireshark} de la capture \texttt{capture1.pcapng}.
+La première colonne de chaque ligne correspond au numéro de séquence dans cette capture.
+
 \begin{warning}
 Une première remarque importante à faire concerne la gestion de l'état des interfaces VLAN par le routeur.
 
@@ -353,6 +356,120 @@ Une alternative consiste à utiliser le VLAN dans lequel se trouve la Freebox, m
 Il faut donc veiller à laisser un périphérique connecté en permanence dans le réseau domicile.
 \end{warning}
 
-% TODO Descriptif de la capture
+On déroule les étapes suivantes :
+
+\begin{enumerate}
+\item Activation de l'interface sur le client A
+\item Ping de B vers A, puis arrêt du ping
+\item A est débranché du VLAN3 et branché sur le VLAN2
+\item Ping de B vers A puis arrêt du ping
+\item Démarrage de \texttt{mip6d} sur le client A
+\item Ping de B vers A en continu
+\item A est débranché du VLAN2 et branché sur le VLAN3
+\item Le ping doit toujours fonctionner
+\end{enumerate}
+
+\subsubsection{Auto-configuration}
+
+% J'ai pas trop compris ce qu'il se passe... Je dirais que effd reçoit un Advertisement dès le début, donc il fait un Neighbor Solicitation et c'est réglé direct ?
+
+Après activation de l'interface réseau sur le client A, celui-ci s'auto-configure en émettant un \texttt{Router Solicitation} :
+
+\begin{paquet}
+7	1.386	fe80::a00:27ff:fe9e:effd	ff02::2	ICMPv6	70	Router Solicitation from 08:00:27:9e:ef:fd
+\end{paquet}
+
+Le routeur répond avec un \texttt{Router Advertisement} :
+
+\begin{paquet}
+10	3.166	fe80::5a8d:9ff:fe14:8900	ff02::1	ICMPv6	126	Router Advertisement from 58:8d:09:14:89:00
+\end{paquet}
+
+\subsubsection{Test dans chaque réseau}
+
+Le premier test consiste à envoyer un ping de B vers A dans le réseau mobile.
+
+\begin{paquet}
+28	74.503	2a01:e35:8a38:6872:226:b0ff:feed:e94a	2a01:e35:8a38:6873:a00:27ff:fe9e:effd	ICMPv6	70	Echo (ping) request id=0x0450, seq=2, hop limit=63 (reply in 29)
+29	74.503	2a01:e35:8a38:6873:a00:27ff:fe9e:effd	2a01:e35:8a38:6872:226:b0ff:feed:e94a	ICMPv6	70	Echo (ping) reply id=0x0450, seq=2, hop limit=64 (request in 28)
+\end{paquet}
+
+L'adresse de A dans le réseau mobile est \texttt{2a01:e35:8a38:6873:a00:27ff:fe9e:effd}, ce qui est bien une adresse dans le VLAN3.
+L'adresse de B est \texttt{2a01:e35:8a38:6872:226:b0ff:feed:e94a}.
+Elle est dans le VLAN2 et ne changera pas au cours de la démonstration.
+
+Nous débranchons ensuite A du VLAN3 pour le placer dans le VLAN2, attendons que son IP soit fixée et relançons un ping vers son adresse dans le réseau domicile.
+
+\begin{paquet}
+83	121.933	2a01:e35:8a38:6872:226:b0ff:feed:e94a	2a01:e35:8a38:6872:a00:27ff:fe9e:effd	ICMPv6	70	Echo (ping) request id=0x0452, seq=0, hop limit=64 (reply in 84)
+84	121.933	2a01:e35:8a38:6872:a00:27ff:fe9e:effd	2a01:e35:8a38:6872:226:b0ff:feed:e94a	ICMPv6	70	Echo (ping) reply id=0x0452, seq=0, hop limit=64 (request in 83)
+\end{paquet}
+
+Cette étape préliminaire permet de vérifier que la communication fonctionne bien entre les deux réseaux avant de mettre en œuvre l'IPv6.
+
+\subsubsection{Mobilité}
+
+En laissant A dans le VLAN2, c'est-à-dire son réseau domicile, le démon \texttt{mip6d} est lancé :
+
+\begin{code}
+# systemctl start mip6d.service
+\end{code}
+
+Ce service envoie alors un \texttt{Binding Update} de A vers le routeur pour indiquer qu'il est dans son réseau domicile.
+Le routeur répond avec un \texttt{Binding Acknowledgment}.
+
+\begin{paquet}
+364	290.533	2a01:e35:8a38:6872::1	2a01:e35:8a38:6872:5a8d:9ff:fe14:8900	MIPv6	110	Binding Update
+365	290.536	2a01:e35:8a38:6872:5a8d:9ff:fe14:8900	2a01:e35:8a38:6872::1	MIPv6	94	Binding Acknowledgement
+\end{paquet}
+
+Le ping de B vers A est alors démarré.
+Le ping est maintenant effectué vers l'adresse qui a été définie dans la configuration du \texttt{mip6d}, soit \texttt{	2a01:e35:8a38:6872::1}.
+
+\begin{paquet}
+437	339.593	2a01:e35:8a38:6872:226:b0ff:feed:e94a	2a01:e35:8a38:6872::1	ICMPv6	70	Echo (ping) request id=0x0457, seq=0, hop limit=64 (reply in 438)
+438	339.593	2a01:e35:8a38:6872::1	2a01:e35:8a38:6872:226:b0ff:feed:e94a	ICMPv6	70	Echo (ping) reply id=0x0457, seq=0, hop limit=64 (request in 437)
+\end{paquet}
+
+Ensuite, A est débranché du VLAN2 et branché sur un port du VLAN3.
+
+\begin{warning}
+Durant la phase de découverte, les ping de B vers A ne sont pas visibles.
+Ceci provient du fait que la capture est réalisée depuis A.
+\end{warning}
+
+Après quelques secondes, A avertit le routeur de son réseau domicile avec un \texttt{Binding Update} :
+
+\begin{paquet}
+485	355.962	2a01:e35:8a38:6872::1	2a01:e35:8a38:6872:5a8d:9ff:fe14:8900	MIPv6	110	Binding Update
+...
+    Alternate care-of address: 2a01:e35:8a38:6873:a00:27ff:fe9e:effd
+\end{paquet}
+
+Ce paquet contient l'adresse \emph{Care Of} dans le réseau mobile : \texttt{2a01:e35:8a38:6873:a00:27ff:fe9e:effd}
+
+La réponse revient à nouveau sous forme de \texttt{Binding Acknowledgement} :
+
+\begin{paquet}
+488	356.965	2a01:e35:8a38:6872:5a8d:9ff:fe14:8900	2a01:e35:8a38:6872::1	MIPv6	94	Binding Acknowledgement
+\end{paquet}
+
+Immédiatement, les ping retransmis par le réseau domicile sont visibles, et la réponse de A est transmise :
+
+\begin{paquet}
+493	357.601	2a01:e35:8a38:6872:226:b0ff:feed:e94a	2a01:e35:8a38:6872::1	ICMPv6	110	Echo (ping) request id=0x0457, seq=18, hop limit=63 (reply in 494)
+494	357.601	2a01:e35:8a38:6872::1	2a01:e35:8a38:6872:226:b0ff:feed:e94a	ICMPv6	110	Echo (ping) reply id=0x0457, seq=18, hop limit=64 (request in 493)
+\end{paquet}
+
+On notera que la valeur \texttt{hop limit} passe de $64$ à $63$, car le paquet effectue un saut supplémentaire par le routeur du réseau domicile avant d'arriver à A.
 
 \subsection{Sécurisation}
+
+À partir de la partie précédente, il doit être évident que l'utilisation de Mobile IPv6 doit être sécurisée.
+En effet, il paraît très simple de réaliser un faux \texttt{Binding Update} pour faire rediriger tout le traffic d'une IP tierce vers une IP que l'on contrôle.
+
+La sécurisation de Mobile IPv6 passe par l'utilisation d'IPSec, qui permet d'assurer l'authenticité et l'intégrité des paquets.
+La RFC4877\footnote{\url{http://tools.ietf.org/html/rfc4877}} décrit un tel usage.
+
+Cisco a également développé des méthodes d'authentification, et notamment un système de clé pré-partagées (SPI), qui est décrit dans la RFC4285\footnote{\url{http://tools.ietf.org/html/rfc4285}}.
+Cette méthode est simple à mettre en œuvre, mais elle n'est malheureusement pas implémentée dans UMPI.
