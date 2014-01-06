@@ -1,12 +1,12 @@
 \section{Mobilité IPv6 (MIPv6)}
 
-Pour assurer la communication, avec le protocole IP, entre des noeuds du réseaux, il faut assigner une adresse IP à chaque noeud.
-Or, cette adresse IP est liée au réseau dans lequel chaque noeud est situé.
-Imaginons que l'on veuille déplacer un noeud entre plusieurs réseaux sans interrompre ses connexions, il faut pour cela que le noeud soit toujours joignable avec la même adresse IP.
-Dans le cas contraire, sur une connexion déjà établie, le noeud deviendra injoignable lors d'un changement de réseau et la connexion sera fermée.
+Pour assurer la communication, avec le protocole IP, entre des nœuds du réseaux, il faut assigner une adresse IP à chaque nœud.
+Or, cette adresse IP est liée au réseau dans lequel chaque nœud est situé.
+Imaginons que l'on veuille déplacer un nœud entre plusieurs réseaux sans interrompre ses connexions, il faut pour cela que le nœud soit toujours joignable avec la même adresse IP.
+Dans le cas contraire, sur une connexion déjà établie, le nœud deviendra injoignable lors d'un changement de réseau et la connexion sera fermée.
 
 Mobilité IPv6 permet de résoudre ce problème.
-Ce méchanisme permet d'autoriser un noeud à conserver son adresse IP même s'il change de réseau.
+Ce mécanisme permet d'autoriser un nœud à conserver son adresse IP même s'il change de réseau.
 Pour cela un équipement est attaché à un réseau, ce sera son \emph{réseau mère}, qui lui fournira une adresse IP fixe et ce dernier permettra d’assurer la continuité des connexions établies.
 On parle de \emph{home address} (HoA) pour l’adresse IP fixe liée au réseau mère (\emph{home network}).
 De plus l’équipement aura toujours une adresse IP variable et temporaire liée à sa localisation et au réseau auquel il est directement connecté, on parle de \emph{care-of address} (CoA).
@@ -18,23 +18,23 @@ Le schéma suivant permet de résumer et expliciter tout cela :
 
 On retrouve le nœud correspondant, qui est le serveur à joindre, le réseau mère qui fait la liaison entre les 2 adresses et le réseau étranger où se trouve physiquement notre équipement.
 La HoA se situe donc sur le réseau mère et la CoA se situe sur le réseau étranger.
-Voyons maintenant les cas d’utilisations de ce système.
+Voyons maintenant les cas d’utilisation de ce système.
 
-\subsection{Le noeud mobile est dans son réseau mère}
+\subsection{Le nœud mobile est dans son réseau mère}
 
-C’est le cas le plus simple, il utilise directement sa \emph{Home Address} et on a un routage classique pour la communication entre le noeud mobile et le serveur.
+C’est le cas le plus simple, il utilise directement sa \emph{Home Address} et on a un routage classique pour la communication entre le nœud mobile et le serveur faisant office de correspondant.
 
 \scalefig{images/schema2}{.7}{}
 
-\subsection{Le mobile est dans un réseau étranger}
+\subsection{Le nœud mobile est dans un réseau étranger}
 
-C’est là que cela devient intéressant, le mobile aura donc sa HoA et une adresse étrangère CoA acquise par les mécanismes d’auto-configuration sur le réseau étranger où est physiquement le noeud mobile.
+C’est là que cela devient intéressant, le mobile aura donc sa HoA et une adresse étrangère CoA acquise par les mécanismes d’auto-configuration sur le réseau étranger où est physiquement le nœud mobile.
 L’agent mère va donc tenir sa table d’association et associer la HoA avec la CoA.
-Si un correspondant veut envoyer un paquet au noeud mobile il enverra un paquet avec comme source la sienne et comme destination la \emph{Home Address} du noeud mobile.
-Une fois arrivé à l’agent mère le paquet va être routé vers la CoA du noeud mobile.
+Si un correspondant veut envoyer un paquet au nœud mobile il enverra un paquet avec comme source la sienne et comme destination la \emph{Home Address} du nœud mobile.
+Une fois arrivé à l’agent mère le paquet va être routé vers la CoA du nœud mobile.
 Pour cela l’agent mère encapsule le paquet qui a donc comme source l’adresse de l’agent mère et comme destination la CoA du mobile.
 Une fois arrivé au mobile le paquet est désencapsulé et transmis aux couches supérieurs avec donc comme source et destinations celles du premier paquet.
-Au yeux du mobile c’est comme s’il était sur son réseau mère, les connexions ne sont donc plus coupées car même si la CoA change, au yeux du mobile la destination est toujours sa HoA qui ne change pas.
+Les connexions ne sont donc plus coupées car même si la CoA change, la destination des connexions est toujours la HoA qui ne change pas.
 L’encapsulation se fait grâce à l’extension d’en-tête IP-IP d’IPv6, dès lors les paquets sont protégés par IPsec et tunnelé vers la CoA en toute sécurité.
 
 \scalefig{images/schema3}{.7}{}
@@ -42,7 +42,7 @@ L’encapsulation se fait grâce à l’extension d’en-tête IP-IP d’IPv6, d
 
 \subsection{Mécanisme d’association}
 
-Pour créer ou mettre à jour une association au niveau de l’agent mère, lors d’un changement de réseau du noeud mobile par exemple, un mécanisme spécifique de Mobilité IPv6 est utilisé.
+Pour créer ou mettre à jour une association au niveau de l’agent mère, lors d’un changement de réseau du nœud mobile par exemple, un mécanisme spécifique de Mobilité IPv6 est utilisé.
 Il s’agit du \emph{Binding Update (BU)}, appelé en français mise à jour d’association.
 Ce mécanisme utilise un mécanisme du NDP permettant de savoir qu’un hôte n’est plus accessible.
 
@@ -55,17 +55,17 @@ Il faut donc garder à l’esprit que la mobilité se fait bien sans cela, il ne
 \subsection{Optimisation du routage}
 
 Pour gagner en efficacité dans certains cas, l’optimisation de routage a été mise en place.
-Le principe est simple et reprend le mécanisme général avec le réseau mère, seulement ici le noeud correspondant va aussi tenir une table d’association HoA/CoA, comme l'agent mère.
-Ainsi par ce biais-là, on garde le même mécanisme, mais le noeud correspondant se substitue à l'agent mère.
-Le noeud mobile contacte directement au noeud correspondant, qui va enlever l’en-tête et obtenir un paquet venant de la HoA et à destination du CN, la connexion n’est donc pas brisée.
+Le principe est simple et reprend le mécanisme général avec le réseau mère, seulement ici le nœud correspondant va aussi tenir une table d’association HoA/CoA, comme l'agent mère.
+Ainsi par ce biais-là, on garde le même mécanisme, mais le nœud correspondant se substitue à l'agent mère.
+Le nœud mobile contacte directement au nœud correspondant, qui va enlever l’en-tête et obtenir un paquet venant de la HoA et à destination du CN, la connexion n’est donc pas brisée.
 
 \scalefig{images/schema6}{.7}{}
 \scalefig{images/schema7}{.7}{}
 
 Il faut aussi faire des Binding Update pour garder à jour les tables d’associations.
-Le noeud mobile doit donc connaître les agents auxquels il doit envoyer ces mises à jour.
-Il a donc une table des agents et lors d’un BU il enverra à son agent mère et au noeud correspondant supportant l’optimisation de routage.
-Il doit toujours tenir à jour l’agent mèrei, car certaines connexions ne supportent pas l’optimisation suivant le serveur correspondant, il peut donc y avoir à la fois des connexions optimisées et d’autres non optimisées.
+Le nœud mobile doit donc connaître les agents auxquels il doit envoyer ces mises à jour.
+Il a donc une table des agents et lors d’un BU il enverra à son agent mère et au nœud correspondant supportant l’optimisation de routage.
+Il doit toujours tenir à jour l’agent mère, car certaines connexions ne supportent pas l’optimisation suivant le serveur correspondant, il peut donc y avoir à la fois des connexions optimisées et d’autres non optimisées.
 
 \scalefig{images/schema8}{.7}{}
 

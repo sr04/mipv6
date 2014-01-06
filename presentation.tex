@@ -3,7 +3,7 @@
   
 \begin{itemize}
   \item La première grande différence est la longueur des adresses qui passe de 32 bits à 128 bits. Le nombre d’adresses augmente donc considérablement.
-  \item On passe d’une écriture décimale (\texttt{172.69.31.15}) à une héxadécimale (\texttt{2001:0db8:0000:85a3:0000:0000:ac1f:8001})
+  \item On passe d’une écriture décimale (\texttt{172.69.31.15}) à une hexadécimale (\texttt{2001:0db8:0000:85a3:0000:0000:ac1f:8001})
   \item Il est permis de ne pas noter les zéros non significatifs. Ainsi l'adresse précédente devient : \texttt{2001:db8:0:85a3:0:0:ac1f:8001}
   \item Des groupes de bits nuls peuvent être omis en gardant les deux-points. Par exemple, dans \texttt{2001:db8:0:85a3::ac1f:8001}, on sait qu'il s’agit de groupes nuls à la place de \texttt{::}. Cette substitution ne peut se faire qu’à un seul endroit, sinon l’adresse devient ambiguë : \texttt{2001:db8::85a3::ac1f:8001} n'est pas valide car on ne sait pas où sont les groupes nuls et comment repartir leur nombre.
   \item Il n’y a plus de masques sous la forme de quatre groupes d'un octet, comme avec IPv4.
@@ -12,7 +12,7 @@ Elle consiste en un slash (\texttt{/}), suivi de la longueur du préfixe réseau
 Le couple formé par le préfixe réseau et la longueur du préfixe permet de savoir de quel type d’adresse il s’agit.
 \end{itemize}
 
-\subsection{Types d’adresse IPv6}
+\subsection{Types d’adresses IPv6}
 
 \begin{itemize}
   \item	\texttt{::/128} : adresse non spécifiée, c’est le \emph{this} pour l’attribution d’une adresse.
