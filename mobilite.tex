@@ -1,17 +1,18 @@
 \section{Mobilité IPv6 (MIPv6)}
 
+Pour assurer la communication, avec le protocole IP, entre des noeuds du réseaux, il faut assigner une adresse IP à chaque noeud.
+Or, cette adresse IP est liée au réseau dans lequel chaque noeud est situé.
+Imaginons que l'on veuille déplacer un noeud entre plusieurs réseaux sans interrompre ses connexions, il faut pour cela que le noeud soit toujours joignable avec la même adresse IP.
+Dans le cas contraire, sur une connexion déjà établie, le noeud deviendra injoignable lors d'un changement de réseau et la connexion sera fermée.
 
-Pour communiquer avec des serveurs, des connexions sont établies et elles sont liées à l’adresse IP.
-Le problème lié à la mobilité est que l’adresse IP est liée au réseau sur lequel on se trouve, dès lors que l’on va se déplacer on va changer de réseau et obtenir une nouvelle adresse IP, les connexions actives vont donc être perdues car l’adresse IP avec laquelle elles avaient établi les connexions n’est plus joignable.
-Un mécanisme à donc été mis en place au sein d’IPv6 pour résoudre le problème : il faut autoriser un équipement à garder son adresse IP \textbf{même s’il change de réseau}.
-Pour cela un équipement est attaché à un réseau, ce sera son \textbf{réseau mère}, qui lui fournira une adresse IP fixe et ce dernier permettra d’assurer la continuité des connexions établies.
+Mobilité IPv6 permet de résoudre ce problème.
+Ce méchanisme permet d'autoriser un noeud à conserver son adresse IP même s'il change de réseau.
+Pour cela un équipement est attaché à un réseau, ce sera son \emph{réseau mère}, qui lui fournira une adresse IP fixe et ce dernier permettra d’assurer la continuité des connexions établies.
 On parle de \emph{home address} (HoA) pour l’adresse IP fixe liée au réseau mère (\emph{home network}).
 De plus l’équipement aura toujours une adresse IP variable et temporaire liée à sa localisation et au réseau auquel il est directement connecté, on parle de \emph{care-of address} (CoA).
 La pierre angulaire de ce système est l’agent mère (HA) situé sur le réseau mère et chargé d’assurer la correspondance entre la HoA et la CoA.
 
-L’IPv6 étant un protocole construit en amont par l’IETF, certains mécanismes pour la mobilité ont directement pu être intégrés dans la conception du protocole.
-
-Voici un petit schéma pour résumer et expliciter tout cela :
+Le schéma suivant permet de résumer et expliciter tout cela :
 
 \scalefig{images/schema1}{.7}{}
 
