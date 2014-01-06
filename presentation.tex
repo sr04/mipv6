@@ -2,23 +2,32 @@
 \subsection{Notation des adresses IPv6}
   
 \begin{itemize}
-\item La première grande différence est la longueur des adresses qui passe de 32 bits à 128 bits. Le nombre d’adresses augmente donc considérablement.
-\item On passe d’une écriture décimale (\texttt{172.69.31.15}) à une héxadécimale (\texttt{2001:0db8:0000:85a3:0000:0000:ac1f:8001})
-\item Il est permis de ne pas noter les zéros non significatifs. Ainsi l'adresse précédente devient : \texttt{2001:db8:0:85a3:0:0:ac1f:8001}
-\item Des groupes de bits nuls peuvent être omis en gardant les deux-points. Par exemple, dans \texttt{2001:db8:0:85a3::ac1f:8001}, on sait qu'il s’agit de groupes nuls à la place de \texttt{::}. Cette substitution ne peut se faire qu’à un seul endroit, sinon l’adresse devient ambiguë : \texttt{2001:db8::85a3::ac1f:8001} n'est pas valide car on ne sait pas où sont les groupes nuls et comment repartir leur nombre.
-\item Il n’y a plus de masques, seulement la notation CIDR \texttt{/}, suivie de la longueur du préfixe réseau. Le couple préfixe réseau/longueur du préfixe permet de savoir de quel type d’adresse il s’agit.
+  \item La première grande différence est la longueur des adresses qui passe de 32 bits à 128 bits. Le nombre d’adresses augmente donc considérablement.
+  \item On passe d’une écriture décimale (\texttt{172.69.31.15}) à une héxadécimale (\texttt{2001:0db8:0000:85a3:0000:0000:ac1f:8001})
+  \item Il est permis de ne pas noter les zéros non significatifs. Ainsi l'adresse précédente devient : \texttt{2001:db8:0:85a3:0:0:ac1f:8001}
+  \item Des groupes de bits nuls peuvent être omis en gardant les deux-points. Par exemple, dans \texttt{2001:db8:0:85a3::ac1f:8001}, on sait qu'il s’agit de groupes nuls à la place de \texttt{::}. Cette substitution ne peut se faire qu’à un seul endroit, sinon l’adresse devient ambiguë : \texttt{2001:db8::85a3::ac1f:8001} n'est pas valide car on ne sait pas où sont les groupes nuls et comment repartir leur nombre.
+  \item Il n’y a plus de masques, seulement la notation CIDR \texttt{/}, suivie de la longueur du préfixe réseau. Le couple préfixe réseau/longueur du préfixe permet de savoir de quel type d’adresse il s’agit.
 \end{itemize}
 
 \subsection{Types d’adresse IPv6}
 
 \begin{itemize}
-\item	\texttt{::/128} : adresse non spécifiée, c’est le \emph{this} pour l’attribution d’une adresse\item	\texttt{::1/128} : adresse loopback, la machine elle-même\item	\texttt{fc00::/7} : adresse locale unique, équivalent des adresses privées\item \texttt{fe80::/10} : adresse locale de lien pour communiquer avec les appareils à distance \texttt{1}, c’est-à-dire les équipements reliés directement. On dit que l’adresse est restreinte à un lien. Nous avons déjà le préfixe : les 64 derniers bits dédiés à l’adresse hôte ont la valeur de l’identifiant d’interface, basée sur l’adresse MAC de la machine\item \texttt{ff00::/8} : adresses multicast\item \texttt{ff02::2} : adresse multicast spécifique permettant de s’adresser à tous les routeurs de distance \texttt{1}\item \texttt{ff02::1} : adresse multicast spécifique permettant de s’adresser à tous les hôtes voisins de distance \texttt{1}\item \texttt{/64} : préfixe d’un sous réseau. La taille d’une sous réseau est fixe en IPv6. Il y a 48 bits pour le FAI, 16 bits pour le sous réseau et 64 bits pour l’hôte.
+  \item	\texttt{::/128} : adresse non spécifiée, c’est le \emph{this} pour l’attribution d’une adresse
+  \item	\texttt{::1/128} : adresse loopback, la machine elle-même
+  \item	\texttt{fc00::/7} : adresse locale unique, équivalent des adresses privées
+  \item \texttt{fe80::/10} : adresse locale de lien pour communiquer avec les appareils à distance \texttt{1}, c’est-à-dire les équipements reliés directement. On dit que l’adresse est restreinte à un lien. Nous avons déjà le préfixe : les 64 derniers bits dédiés à l’adresse hôte ont la valeur de l’identifiant d’interface, basée sur l’adresse MAC de la machine
+  \item \texttt{ff00::/8} : adresses multicast
+  \item \texttt{ff02::2} : adresse multicast spécifique permettant de s’adresser à tous les routeurs de distance \texttt{1}
+  \item \texttt{ff02::1} : adresse multicast spécifique permettant de s’adresser à tous les hôtes voisins de distance \texttt{1}
+  \item \texttt{/64} : préfixe d’un sous réseau. La taille d’une sous réseau est fixe en IPv6. Il y a 48 bits pour le FAI, 16 bits pour le sous réseau et 64 bits pour l’hôte.
 \end{itemize}
 
 \subsection{Principe des options}
 
-De nombreuses choses sont désormais en options pour l’en-tête d’un paquet ce qui permet d’alléger de manière générale la taille d’un paquet tout en permettant une plus grande flexibilité et évolutivité par le biais des options. Les options de l’en-tête sont stockées sous la forme d’une liste chaînée.
+De nombreuses choses sont désormais en options pour l’en-tête d’un paquet ce qui permet d’alléger de manière générale la taille d’un paquet tout en permettant une plus grande flexibilité et évolutivité par le biais des options.
+Les options de l’en-tête sont stockées sous la forme d’une liste chaînée.
 
+\newpage
 \section{Attribution des adresses en IPv6}
 
 \subsection{Auto-configuration}
@@ -26,31 +35,43 @@ De nombreuses choses sont désormais en options pour l’en-tête d’un paquet 
 Il existe différentes méthodes avec IPv6 pour l’attribution d’une adresse IP globale aux équipements.
 
 \begin{itemize}
-\item La classique attribution manuelle\item L’auto-configuration sans état, en lien avec le NDP. Il n’y a pas besoin de serveur pour distribuer les adresses, cette dernière est auto-attribué grâce à NDP. On a ici un fonctionnement \emph{plug-and-play} au niveau de l’interface réseau.\item L’auto-configuration avec état, c’est-à-dire avec un serveur DHCPv6, très semblable à celle sous IPv4. On garde la main sur les adresses attribuées en donnant un pool d’adresse au serveur DHCP, permettant de centraliser les adresses attribuées. Nous ne détaillerons pas plus cela.
+  \item La classique attribution manuelle
+  \item L’auto-configuration sans état, en lien avec le NDP. Il n’y a pas besoin de serveur pour distribuer les adresses, cette dernière est auto-attribué grâce à NDP. On a ici un fonctionnement \emph{plug-and-play} au niveau de l’interface réseau.
+  \item L’auto-configuration avec état, c’est-à-dire avec un serveur DHCPv6, très semblable à celle sous IPv4. On garde la main sur les adresses attribuées en donnant un pool d’adresse au serveur DHCP, permettant de centraliser les adresses attribuées. Nous ne détaillerons pas plus cela.
+% TODO retirer la fin après avoir fait la partie DHCPv6
 \end{itemize}
 
 \subsection{Neighbor Discovery Protocol (NDP)}
 
 Nous allons ici faire le lien entre l’adresse locale de lien et l’auto-configuration sans état.
-Le NDP est une des nouveautés d’IPv6 et c’est ce qui contribue à son attrait. Ce protocole fournit des services semblables à ARP (Address Resolution Protocol), ICMP (Internet Control and Error Messages) et plus encore. Il est basé principalement sur le protocole ICMP qui a été enrichi par rapport à IPv4 : on parle d’ICMPv6.Voici les différentes fonctions que remplit ce protocole :
+Le NDP est une des nouveautés d’IPv6 et c’est ce qui contribue à son attrait.
+Ce protocole fournit des services semblables à ARP (Address Resolution Protocol), ICMP (Internet Control and Error Messages) et plus encore.
+Il utilise principalement le protocole ICMP qui a été enrichi par rapport à IPv4 : on parle d’ICMPv6.
+
+Voici les différentes fonctions que remplit ce protocole :
 \begin{itemize}
-\item La résolution d’adresse, semblable à ARP seulement ici le protocole utilise les messages standards d’ICMPv6.\item NUD (Neighbor Unreachability Detection) : c’est une des nouveautés d’IPv6, cela permet d’effacer des tables les équipements proches devenus inaccessibles. Il permet une plus grande adaptabilité pour changer une route au sein d’un routeur si un de ses voisins devient inaccessible.\item La configuration automatique d’un équipement grâce à la découverte de ses voisins avec par exemple :
-\begin{itemize}
-\item découverte des routeurs\item découverte des préfixes réseau, qui lui permet de construire son ou ses propres adresses IPv6 (la procédure sera expliquée plus loin)
-\item découverte des adresses dupliquées, qui permet d’éviter que l’adresse construite automatiquement n’existe déjà sur le réseau\item découverte des paramètres du lien physique (taille du MTU, nombre de sauts max autorisés...)
-\end{itemize}
-\item	Indication de redirection, envoyée par un routeur s’il connaît une meilleure route en nombre de saut pour atteindre une destination.
+  \item La résolution d’adresse, semblable à ARP seulement ici le protocole utilise les messages standards d’ICMPv6.
+  \item NUD (Neighbor Unreachability Detection) : c’est une des nouveautés d’IPv6, cela permet d’effacer des tables les équipements proches devenus inaccessibles. Il permet une plus grande adaptabilité pour changer une route au sein d’un routeur si un de ses voisins devient inaccessible.
+  \item La configuration automatique d’un équipement grâce à la découverte de ses voisins avec par exemple :
+    \begin{itemize}
+      \item découverte des routeurs
+      \item découverte des préfixes réseau, qui lui permet de construire son ou ses propres adresses IPv6 (la procédure sera expliquée plus loin)
+      \item découverte des adresses dupliquées, qui permet d’éviter que l’adresse construite automatiquement n’existe déjà sur le réseau
+      \item découverte des paramètres du lien physique (taille du MTU, nombre de sauts max autorisés...)
+    \end{itemize}
+  \item	Indication de redirection, envoyée par un routeur s’il connaît une meilleure route en nombre de saut pour atteindre une destination.
 \end{itemize}On peut donc voir que IPv6 remplit de nombreuses fonctions dont certaines sont nouvelles.
 
 Voyons donc la procédure d’auto-configuration d’une adresse pour un nouvel équipement rattaché à un réseau :
 \begin{itemize}
-\item la toute première étape consiste à créer l'adresse locale de lien de l’équipement.
-\item une fois l'unicité de cette adresse vérifiée, la machine est en mesure de communiquer avec les autres machines de distance 1. Les machines de distance 1 sont les machines du lien.
-\item pour savoir comment sera attribuée l’adresse unicast globale (l’IP globale), la machine doit chercher à acquérir un message d'annonce d’un routeur
-\item s'il y a un routeur sur le lien, la machine doit appliquer la méthode indiquée par le message d'annonce du routeur :
-\begin{itemize}
-\item l'auto-configuration sans état, la machine utilise sont adresse de lien locale comme adresse unicast globale
-\item l'auto-configuration avec état (DHCPv6)
+  \item la toute première étape consiste à créer l'adresse locale de lien de l’équipement.
+  \item une fois l'unicité de cette adresse vérifiée, la machine est en mesure de communiquer avec les autres machines de distance 1. Les machines de distance 1 sont les machines du lien.
+  \item pour savoir comment sera attribuée l’adresse unicast globale (l’IP globale), la machine doit chercher à acquérir un message d'annonce d’un routeur
+  \item s'il y a un routeur sur le lien, la machine doit appliquer la méthode indiquée par le message d'annonce du routeur :
+    \begin{itemize}
+      \item l'auto-configuration sans état, la machine utilise sont adresse de lien locale comme adresse unicast globale
+      \item l'auto-configuration avec état (DHCPv6)
+    \end{itemize}
+  \item en l'absence de routeur sur le lien, la machine doit essayer d'acquérir l'adresse unicast globale par la méthode d'auto-configuration sans état. Si la tentative échoue, c'est terminé. Les communications se feront uniquement sur le lien avec l'adresse locale de lien. La machine n'a pas une adresse avec une portée qui l'autorise à communiquer avec des machines autres que celles du lien.
 \end{itemize}
-\item en l'absence de routeur sur le lien, la machine doit essayer d'acquérir l'adresse unicast globale par la méthode d'auto-configuration sans état. Si la tentative échoue, c'est terminé. Les communications se feront uniquement sur le lien avec l'adresse locale de lien. La machine n'a pas une adresse avec une portée qui l'autorise à communiquer avec des machines autres que celles du lien.
-\end{itemize}
+
