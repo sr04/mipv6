@@ -15,6 +15,7 @@
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{float}
 
 \geometry{top=2.7cm,bottom=2.7cm,left=2.7cm,right=2.7cm}
 \interfootnotelinepenalty=10000
@@ -86,22 +87,16 @@
                    \labelwidth=\leftmargin}\item[\Large\ding{43}]}
   {\end{list}\par}
 
-% Includes a figure
-% The first parameter is the label, which is also the name of the figure
-%   with or without the extension (e.g., .eps, .fig, .png, .gif, etc.)
-% The second parameter is the width of the figure normalized to column width
-%   (e.g. 0.5 for half a column, 0.75 for 75% of the column)
-% The third parameter is the caption.
+% Includes a figure \scalefig{filename}{scale}{legend}
 \newcommand{\scalefig}[3]{
-  \begin{figure}[ht!]
-    % Requires \usepackage{graphicx}
+  \begin{figure}[H]
     \centering
     \includegraphics[width=#2\columnwidth]{#1}
     \caption{#3}
     \label{#1}
   \end{figure}}
 \newcommand{\scalefiguntitled}[2]{
-  \begin{figure}[ht!]
+  \begin{figure}[H]
     \centering
     \includegraphics[width=#2\columnwidth]{#1}
     \label{#1}
