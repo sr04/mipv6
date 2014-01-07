@@ -1,3 +1,42 @@
 \section{Conclusion}
 
-%todo
+Cette étude nous a permis d'acquérir de bonnes connaissances de base sur IPv6, qui va devenir très rapidement omniprésent.
+Mobile IPv6 est une fonctionnalité supplémentaire apportée par IPv6.
+Elle montre que le protocole permet une construction modulaire : la sécurité de Mobile IPv6 peut ainsi être implémentée de différentes manières, tout en conservant un protocole de base compatible.
+
+Cependant, cette modularité est aussi une faiblesse : Cisco et UMIP n'ont pas choisi d'implémenter les mêmes techniques pour la sécurisation, ce qui pose des soucis d'interopérabilité.
+Cette modularité fait penser à l'authentification sur les réseaux Wi-Fi, que nous avons étudiée en SR06.
+La RFC5778\footnote{\url{http://tools.ietf.org/html/rfc5778}} décrit d'ailleurs une méthode pour s'authentifier avec de l'EAP en Mobile IPv6, un protocole qui est couramment utilisé sur les réseaux Wi-Fi aujourd'hui.
+
+Enfin, 10 ans après la publication de la première RFC sur Mobile IPv6, son support reste relativement limité : une des implémentations sous Linux a été abandonnée et l'utilisation sous les dernières variantes de Debian nécessite une compilation de noyau.
+De plus, le processus nécessite une configuration manuelle qui réserve pour l'instant son utilisation à des cas très précis.
+
+Mobile IPv6 nécessite donc encore quelques développements avant d'être utilisable à grande échelle, mais apporte une fonctionnalité précieuse à IPv6.
+Le nécessaires sera donc très probablement réalisé avec le déploiement d'IPv6 dans les années qui viennent.
+
+
+%                                                               %
+%                        \                                      %
+%                         \                                     %
+%                          \\                                   %
+%                           \\                                  %
+%                            >\/7                               %
+%                        _.-(6'  \                              %
+%                       (=___._/` \                             %
+%                            )  \ |                             %
+%                           /   / |                             %
+%                          /    > /                             %
+%                         j    < _\                             %
+%                     _.-' :      ``.                           %
+%                     \ r=._\        `.                         %
+%                    <`\\_  \         .`-.                      %
+%                     \ r-7  `-. ._  ' .  `\                    %
+%                      \`,      `-.`7  7)   )                   %
+%                       \/         \|  \'  / `-._               %
+%                                  ||    .'                     %
+%                                   \\  (                       %
+%                                    >\  >                      %
+%                                ,.-' >.'                       %
+%                               <.'_.''                         %
+%                                 <'                            %
+%                                                               %
