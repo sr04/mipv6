@@ -1,39 +1,39 @@
 \section{Mobilité IPv6 (MIPv6)}
 
-Pour assurer la communication, avec le protocole IP, entre des nœuds du réseaux, il faut assigner une adresse IP à chaque nœud.
-Or, cette adresse IP est liée au réseau dans lequel chaque nœud est situé.
+Avec le protocole IP, pour assurer la communication entre des nœuds du réseaux, il faut assigner une adresse IP à chaque nœud.
+Or cette adresse IP est liée au réseau dans lequel chaque nœud est situé.
 Imaginons que l'on veuille déplacer un nœud entre plusieurs réseaux sans interrompre ses connexions, il faut pour cela que le nœud soit toujours joignable avec la même adresse IP.
 Dans le cas contraire, sur une connexion déjà établie, le nœud deviendra injoignable lors d'un changement de réseau et la connexion sera fermée.
 
-Mobilité IPv6 permet de résoudre ce problème.
-Ce mécanisme permet d'autoriser un nœud à conserver son adresse IP même s'il change de réseau.
-Pour cela un équipement est attaché à un réseau, ce sera son \emph{réseau mère}, qui lui fournira une adresse IP fixe et ce dernier permettra d’assurer la continuité des connexions établies.
-On parle de \emph{home address} (HoA) pour l’adresse IP fixe liée au réseau mère (\emph{home network}).
-De plus l’équipement aura toujours une adresse IP variable et temporaire liée à sa localisation et au réseau auquel il est directement connecté, on parle de \emph{care-of address} (CoA).
-La pierre angulaire de ce système est l’agent mère (HA) situé sur le réseau mère et chargé d’assurer la correspondance entre la HoA et la CoA.
+Mobilité IPv6 (\textit{MIPv6}) permet de résoudre ce problème.
+Ce mécanisme autorise un nœud à conserver son adresse IP même s'il change de réseau.
+Pour cela un équipement est attaché à un réseau, ce sera son \emph{réseau mère}, qui lui fournira une adresse IP fixe et cette dernière permettra d’assurer la continuité des connexions établies.
+On parle de \emph{Home Address} (HoA) pour l’adresse IP fixe liée au réseau mère (\emph{Home Network}).
+De plus l’équipement aura toujours une adresse IP variable et temporaire liée à sa localisation et au réseau auquel il est directement connecté, on parle de \emph{Care-of Address} (CoA).
+La pierre angulaire de ce système est l’agent mère (\emph{Home Agent}) situé sur le réseau mère et chargé d’assurer la correspondance entre la HoA et la CoA.
 
 Le schéma suivant permet de résumer et expliciter tout cela :
 
 \scalefig{images/schema1}{.7}{}
 
-On retrouve le nœud correspondant, qui est le serveur à joindre, le réseau mère qui fait la liaison entre les 2 adresses et le réseau étranger où se trouve physiquement notre équipement.
+On retrouve le nœud correspondant, qui est le serveur à joindre, le réseau mère qui fait la liaison entre les 2 adresses grâce à l'agent mère et le réseau étranger où se trouve physiquement notre équipement (nœud mobile).
 La HoA se situe donc sur le réseau mère et la CoA se situe sur le réseau étranger.
 Voyons maintenant les cas d’utilisation de ce système.
 
 \subsection{Le nœud mobile est dans son réseau mère}
 
-C’est le cas le plus simple, il utilise directement sa \emph{Home Address} et on a un routage classique pour la communication entre le nœud mobile et le serveur faisant office de correspondant.
+C’est le cas le plus simple, il utilise directement sa \emph{Home Address} et on a un routage classique pour la communication entre le nœud mobile et le nœud correspondant.
 
 \scalefig{images/schema2}{.7}{}
 
 \subsection{Le nœud mobile est dans un réseau étranger}
 
-C’est là que cela devient intéressant, le mobile aura donc sa HoA et une adresse étrangère CoA acquise par les mécanismes d’auto-configuration sur le réseau étranger où est physiquement le nœud mobile.
-L’agent mère va donc tenir sa table d’association et associer la HoA avec la CoA.
+Ici le nœud mobile aura sa HoA et une adresse étrangère CoA acquise par les mécanismes d’auto-configuration sur le réseau étranger où il est physiquement.
+L’agent mère va tenir sa table d’association et associer la HoA avec la CoA.
 Si un correspondant veut envoyer un paquet au nœud mobile il enverra un paquet avec comme source la sienne et comme destination la \emph{Home Address} du nœud mobile.
-Une fois arrivé à l’agent mère le paquet va être routé vers la CoA du nœud mobile.
-Pour cela l’agent mère encapsule le paquet qui a donc comme source l’adresse de l’agent mère et comme destination la CoA du mobile.
-Une fois arrivé au mobile le paquet est désencapsulé et transmis aux couches supérieurs avec donc comme source et destinations celles du premier paquet.
+Une fois arrivé à l’agent mère, le paquet va être routé vers la CoA du nœud mobile.
+Pour cela l’agent mère encapsule le paquet qui aura comme source l’adresse de l’agent mère et comme destination la CoA du mobile.
+Une fois arrivé au mobile le paquet est désencapsulé et transmis aux couches supérieurs avec comme source et destination celles du premier paquet.
 Les connexions ne sont donc plus coupées car même si la CoA change, la destination des connexions est toujours la HoA qui ne change pas.
 L’encapsulation se fait grâce à l’extension d’en-tête IP-IP d’IPv6, dès lors les paquets sont protégés par IPsec et tunnelé vers la CoA en toute sécurité.
 
@@ -48,7 +48,7 @@ Ce mécanisme utilise un mécanisme du NDP permettant de savoir qu’un hôte n�
 
 \scalefig{images/schema5}{.7}{}
 
-Un soucis que pose ce mécanisme est une certaines inefficacité et une lenteur au niveau du routage car il faut obligatoirement passé par le réseau mère, même si le réseau avec lequel on communique est proche de nous.
+Un soucis que pose ce mécanisme est une certaine inefficacité et une lenteur au niveau du routage car il faut obligatoirement passé par le réseau mère, même si le réseau avec lequel on communique est proche de nous physiquement.
 Un mécanisme d’optimisation du routage a donc été mis en place, mais il n’est pas toujours supporté par le serveur avec lequel on communique.
 Il faut donc garder à l’esprit que la mobilité se fait bien sans cela, il ne s’agit que d’une amélioration, pas d’une obligation.
 
@@ -56,16 +56,16 @@ Il faut donc garder à l’esprit que la mobilité se fait bien sans cela, il ne
 
 Pour gagner en efficacité dans certains cas, l’optimisation de routage a été mise en place.
 Le principe est simple et reprend le mécanisme général avec le réseau mère, seulement ici le nœud correspondant va aussi tenir une table d’association HoA/CoA, comme l'agent mère.
-Ainsi par ce biais-là, on garde le même mécanisme, mais le nœud correspondant se substitue à l'agent mère.
-Le nœud mobile contacte directement au nœud correspondant, qui va enlever l’en-tête et obtenir un paquet venant de la HoA et à destination du CN, la connexion n’est donc pas brisée.
+Ainsi on garde le même mécanisme, mais le nœud correspondant se substitue à l'agent mère.
+Le nœud mobile contacte directement le nœud correspondant, qui va enlever l’en-tête et obtenir un paquet venant de la HoA et à destination du nœud correspondant, la connexion n’est donc pas brisée.
 
 \scalefig{images/schema6}{.7}{}
 \scalefig{images/schema7}{.7}{}
 
-Il faut aussi faire des Binding Update pour garder à jour les tables d’associations.
-Le nœud mobile doit donc connaître les agents auxquels il doit envoyer ces mises à jour.
-Il a donc une table des agents et lors d’un BU il enverra à son agent mère et au nœud correspondant supportant l’optimisation de routage.
-Il doit toujours tenir à jour l’agent mère, car certaines connexions ne supportent pas l’optimisation suivant le serveur correspondant, il peut donc y avoir à la fois des connexions optimisées et d’autres non optimisées.
+Il faut aussi faire des Binding Update pour garder à jour les tables d’association.
+Le nœud mobile doit connaître les agents auxquels il doit envoyer ces mises à jour.
+Il tient une table des agents et lors d’un BU il enverra à chaque élément de la table. Ici il envoie à son agent mère et au nœud correspondant supportant l’optimisation de routage.
+Le nœud mobile doit toujours tenir à jour l’agent mère, car certaines connexions ne supportent pas l’optimisation de routage (si le nœud correspondant n'est pas compatible), il peut donc y avoir à la fois des connexions optimisées et non optimisées.
 
 \scalefig{images/schema8}{.7}{}
 
