@@ -14,7 +14,7 @@ La pierre angulaire de ce système est l’agent mère (\emph{Home Agent}) situ�
 
 Le schéma suivant permet de résumer et expliciter tout cela :
 
-\scalefig{images/schema1}{.7}{}
+\scalefig{images/schema1}{.7}{Schéma représentant les différents éléments utilisé pour MIPv6}
 
 On retrouve le nœud correspondant, qui est le serveur à joindre, le réseau mère qui fait la liaison entre les 2 adresses grâce à l'agent mère et le réseau étranger où se trouve physiquement notre équipement (nœud mobile).
 La HoA se situe donc sur le réseau mère et la CoA se situe sur le réseau étranger.
@@ -24,7 +24,7 @@ Voyons maintenant les cas d’utilisation de ce système.
 
 C’est le cas le plus simple, il utilise directement sa \emph{Home Address} et on a un routage classique pour la communication entre le nœud mobile et le nœud correspondant.
 
-\scalefig{images/schema2}{.7}{}
+\scalefig{images/schema2}{.7}{Cas où le nœud mobile est dans son réseau mère}
 
 \subsection{Le nœud mobile est dans un réseau étranger}
 
@@ -37,8 +37,8 @@ Une fois arrivé au mobile le paquet est désencapsulé et transmis aux couches 
 Les connexions ne sont donc plus coupées car même si la CoA change, la destination des connexions est toujours la HoA qui ne change pas.
 L’encapsulation se fait grâce à l’extension d’en-tête IP-IP d’IPv6, dès lors les paquets sont protégés par IPsec et tunnelé vers la CoA en toute sécurité.
 
-\scalefig{images/schema3}{.7}{}
-\scalefig{images/schema4}{.7}{}
+\scalefig{images/schema3}{.7}{Un nœud correspondant essaie de joindre le nœud mobile}
+\scalefig{images/schema4}{.7}{Le nœud mobile répond au nœud correspondant}
 
 \subsection{Mécanisme d’association}
 
@@ -46,7 +46,7 @@ Pour créer ou mettre à jour une association au niveau de l’agent mère, lors
 Il s’agit du \emph{Binding Update (BU)}, appelé en français mise à jour d’association.
 Ce mécanisme utilise un mécanisme du NDP permettant de savoir qu’un hôte n’est plus accessible.
 
-\scalefig{images/schema5}{.7}{}
+\scalefig{images/schema5}{.7}{Envoi de Binding Update}
 
 Un soucis que pose ce mécanisme est une certaine inefficacité et une lenteur au niveau du routage car il faut obligatoirement passé par le réseau mère, même si le réseau avec lequel on communique est proche de nous physiquement.
 Un mécanisme d’optimisation du routage a donc été mis en place, mais il n’est pas toujours supporté par le serveur avec lequel on communique.
@@ -59,13 +59,13 @@ Le principe est simple et reprend le mécanisme général avec le réseau mère,
 Ainsi on garde le même mécanisme, mais le nœud correspondant se substitue à l'agent mère.
 Le nœud mobile contacte directement le nœud correspondant, qui va enlever l’en-tête et obtenir un paquet venant de la HoA et à destination du nœud correspondant, la connexion n’est donc pas brisée.
 
-\scalefig{images/schema6}{.7}{}
-\scalefig{images/schema7}{.7}{}
+\scalefig{images/schema6}{.7}{Un nœud correspondant essaie de joindre le nœud mobile}
+\scalefig{images/schema7}{.7}{Le nœud mobile répond au nœud correspondant}
 
 Il faut aussi faire des Binding Update pour garder à jour les tables d’association.
 Le nœud mobile doit connaître les agents auxquels il doit envoyer ces mises à jour.
 Il tient une table des agents et lors d’un BU il enverra à chaque élément de la table. Ici il envoie à son agent mère et au nœud correspondant supportant l’optimisation de routage.
 Le nœud mobile doit toujours tenir à jour l’agent mère, car certaines connexions ne supportent pas l’optimisation de routage (si le nœud correspondant n'est pas compatible), il peut donc y avoir à la fois des connexions optimisées et non optimisées.
 
-\scalefig{images/schema8}{.7}{}
+\scalefig{images/schema8}{.7}{Envoi de Binding Update}
 
