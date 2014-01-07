@@ -18,7 +18,7 @@ Le couple formé par le préfixe réseau et la longueur du préfixe permet de sa
   \item	\texttt{::/128} : adresse non spécifiée, c’est le \emph{this} pour l’attribution d’une adresse.
   \item	\texttt{::1/128} : adresse loopback, la machine elle-même.
   \item	\texttt{fc00::/7} : adresse locale unique, équivalent des adresses privées.
-  \item \texttt{fe80::/10} : adresse locale de lien pour communiquer avec les appareils à distance \texttt{1}, c’est-à-dire les équipements reliés directement.
+  \item \texttt{fe80::/10} : adresse locale de lien (\textit{link-local address}) pour communiquer avec les appareils à distance \texttt{1}, c’est-à-dire les équipements reliés directement.
 On dit que l’adresse est restreinte à un lien.
 Nous avons déjà le préfixe : les 64 derniers bits dédiés à l’adresse hôte ont la valeur de l’identifiant d’interface, basée sur l’adresse MAC de la machine.
   \item \texttt{ff00::/8} : adresses multicast.
@@ -39,10 +39,10 @@ Les options de l’en-tête sont stockées sous la forme d’une liste chaînée
 
 \subsection{Auto-configuration}
 
-Il existe différentes méthodes avec IPv6 pour l’attribution d’une adresse IP globale aux équipements.
+Il existe différentes méthodes au sein d'IPv6 pour l’attribution d’une adresse IP globale aux équipements.
 
 \begin{itemize}
-  \item La classique attribution manuelle.
+  \item L'attribution manuelle classique.
   \item L’auto-configuration sans état, en lien avec le NDP.
 Il n’y a pas besoin de serveur pour distribuer les adresses, cette dernière est auto-attribuée grâce à NDP.
 On a ici un fonctionnement \emph{plug-and-play} au niveau de l’interface réseau.
@@ -53,7 +53,7 @@ Nous ne détaillerons pas plus cela. % TODO retirer après avoir fait la partie 
 
 \subsection{Neighbor Discovery Protocol (NDP)}
 
-Nous allons ici faire le lien entre l’adresse locale de lien et l’auto-configuration sans état.
+Nous allons ici faire le lien entre l’adresse locale de lien (\textit{link-local address}) et l’auto-configuration sans état (\textit{stateless address autoconfiguration}).
 Le NDP est une des nouveautés d’IPv6 et c’est ce qui contribue à son attrait.
 Ce protocole fournit des services semblables à ARP (Address Resolution Protocol), ICMP (Internet Control and Error Messages) et plus encore.
 Il utilise principalement le protocole ICMP qui a été enrichi par rapport à IPv4 : on parle d’ICMPv6.
@@ -70,10 +70,9 @@ Voici les différentes fonctions que remplit ce protocole :
       \item découverte des paramètres du lien physique (taille du MTU, nombre de sauts max autorisés...).
     \end{itemize}
   \item	Indication de redirection, envoyée par un routeur s’il connaît une meilleure route en nombre de saut pour atteindre une destination.
-\end{itemize}On peut donc voir que IPv6 remplit de nombreuses fonctions dont certaines sont nouvelles.
-
+\end{itemize}Avec ICMPv6, de nombreuses fonctions sont présentes et de nombreuses sont nouvelles, ce qui enrichit considérablement IPv6.
 \newpage
-Voyons donc la procédure d’auto-configuration d’une adresse pour un nouvel équipement rattaché à un réseau :
+Voici la procédure d’auto-configuration d’une adresse pour un nouvel équipement rattaché à un réseau :
 \begin{itemize}
   \item la toute première étape consiste à créer l'adresse locale de lien (\textit{link-local address}) de l’équipement.
   \item une fois l'unicité de cette adresse vérifiée, la machine est en mesure de communiquer avec les autres machines de distance 1. Les machines de distance 1 sont les machines du lien.
@@ -83,6 +82,6 @@ Voyons donc la procédure d’auto-configuration d’une adresse pour un nouvel 
       \item l'auto-configuration sans état, la machine utilise sont adresse de lien locale comme adresse unicast globale;
       \item l'auto-configuration avec état (DHCPv6).
     \end{itemize}
-  \item en l'absence de routeur sur le lien, la machine doit essayer d'acquérir l'adresse unicast globale par la méthode d'auto-configuration sans état. Si la tentative échoue, c'est terminé. Les communications se feront uniquement sur le lien avec l'adresse locale de lien. La machine n'a pas une adresse avec une portée qui l'autorise à communiquer avec des machines autres que celles du lien.
+  \item en l'absence de routeur sur le lien, la machine doit essayer d'acquérir une adresse unicast globale par la méthode d'auto-configuration sans état. Si la tentative échoue, c'est terminé. Les communications se feront uniquement sur le lien avec l'adresse locale de lien. En effet la machine n'a pas une adresse avec une portée qui l'autorise à communiquer avec des machines autres que celles du lien.
 \end{itemize}
 
