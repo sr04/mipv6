@@ -14,7 +14,7 @@ Les branchements sont les suivants :
     Port                   & Connecté à \\ \hline
     FastEthernet 0 (WAN)   & Freebox    \\ \hline
     FastEthernet 1 (WAN)   & n.c.       \\ \hline
-    FastEthernet 2-3 (LAN) & Clients (réseau domicile)   \\ \hline
+    FastEthernet 2-3 (LAN) & Clients (réseau mère)   \\ \hline
     FastEthernet 4-5 (LAN) & Clients (réseau mobile)   \\ \hline
     FastEthernet 6-9 (LAN) & n.c.   \\ \hline
     \end{tabular}
@@ -118,7 +118,7 @@ Les réseaux seront utilisés de cette manière :
     \begin{tabular}{|l|l|l|l|}
     \hline
     ID du sous-réseau & Adresse du sous-réseau           & Description                          & Interface \\ \hline
-    2                 & \texttt{2a01:e35:8a38:6872::/64} & Réseau domicile                      & VLAN2     \\ \hline
+    2                 & \texttt{2a01:e35:8a38:6872::/64} & réseau mère                      & VLAN2     \\ \hline
     3                 & \texttt{2a01:e35:8a38:6873::/64} & Réseau mobile                        & VLAN3     \\ \hline
     4                 & \texttt{2a01:e35:8a38:6874::/64} & \emph{Réservé Wi-Fi}                       & -         \\ \hline
     5                 & \texttt{2a01:e35:8a38:6875::/64} & Réseau extérieur & WAN       \\ \hline
@@ -173,7 +173,7 @@ PING 2a01:e35:8a38:6875:5a8d:9ff:fe14:8900 from 2001:41d0:8:9b46::1 eth0: 56 dat
 
 Afin de séparer les réseaux domicile et mobile entre les différents ports du switch, nous allons utiliser deux VLAN.
 
-Le VLAN2 est utilisé pour le réseau domicile.
+Le VLAN2 est utilisé pour le réseau mère.
 Il est accessible sur les ports 2 et 3 du switch :
 
 \begin{code}
@@ -290,7 +290,7 @@ Une autre alternative est \emph{MIPL} \footnote{Mobile IPv6 for Linux, \url{http
 # yum install mipv6-daemon
 \end{code}
 
-On peut alors créer le fichier de configuration \texttt{/etc/mip6d.conf}, qui spécifie que le client joue ici le rôle de \emph{Mobile Node} (\texttt{MN}), ainsi que l'adresse du réseau domicile et du \emph{Home Agent} (c'est-à-dire le routeur) :
+On peut alors créer le fichier de configuration \texttt{/etc/mip6d.conf}, qui spécifie que le client joue ici le rôle de \emph{Mobile Node} (\texttt{MN}), ainsi que l'adresse du réseau mère et du \emph{Home Agent} (c'est-à-dire le routeur) :
 
 \begin{code}
 NodeConfig MN;
@@ -318,8 +318,8 @@ Il faut ensuite redémarrer le démon pour prendre en compte cette configuration
 \subsection{Analyse du traffic}
 
 Maintenant que tout est configuré, on peut réaliser la démonstration.
-L'objectif est de connecter un client dans le réseau domicile, puis de le connecter dans le réseau mobile et de vérifier qu'il est toujours joignable sur son adresse d'origine.
-Pour vérifier cela, on utilisera un tiers qui envoie des \texttt{ping} vers l'adresse dans le réseau domicile.
+L'objectif est de connecter un client dans le réseau mère, puis de le connecter dans le réseau mobile et de vérifier qu'il est toujours joignable sur son adresse d'origine.
+Pour vérifier cela, on utilisera un tiers qui envoie des \texttt{ping} vers l'adresse dans le réseau mère.
 Le tiers pourra se trouver dans un réseau quelconque.
 
 Les paquets affichés dans ce document sont issus de l'analyse avec \emph{Wireshark} de la capture \texttt{capture1.pcapng}.
@@ -354,7 +354,7 @@ Home Agent information for Vlan3
 
 Une alternative consiste à utiliser le VLAN dans lequel se trouve la Freebox, mais celle-ci va alors répondre aux trames liées à Mobile IPv6, ce qui perturbe le client.
 
-Il faut donc veiller à laisser un périphérique connecté en permanence dans le réseau domicile.
+Il faut donc veiller à laisser un périphérique connecté en permanence dans le réseau mère.
 \end{warning}
 
 On déroule les étapes suivantes :
@@ -399,7 +399,7 @@ L'adresse de A dans le réseau mobile est \texttt{2a01:e35:8a38:6873:a00:27ff:fe
 L'adresse de B est \texttt{2a01:e35:8a38:6872:226:b0ff:feed:e94a}.
 Elle est dans le VLAN2 et ne changera pas au cours de la démonstration.
 
-Nous débranchons ensuite A du VLAN3 pour le placer dans le VLAN2, attendons que son IP soit fixée et relançons un ping vers son adresse dans le réseau domicile.
+Nous débranchons ensuite A du VLAN3 pour le placer dans le VLAN2, attendons que son IP soit fixée et relançons un ping vers son adresse dans le réseau mère.
 
 \begin{paquet}
 83	121.933	2a01:e35:8a38:6872:226:b0ff:feed:e94a	2a01:e35:8a38:6872:a00:27ff:fe9e:effd	ICMPv6	70	Echo (ping) request id=0x0452, seq=0, hop limit=64 (reply in 84)
@@ -410,13 +410,13 @@ Cette étape préliminaire permet de vérifier que la communication fonctionne b
 
 \subsubsection{Mobilité}
 
-En laissant A dans le VLAN2, c'est-à-dire son réseau domicile, le démon \texttt{mip6d} est lancé :
+En laissant A dans le VLAN2, c'est-à-dire son réseau mère, le démon \texttt{mip6d} est lancé :
 
 \begin{code}
 # systemctl start mip6d.service
 \end{code}
 
-Ce service envoie alors un \texttt{Binding Update} de A vers le routeur pour indiquer qu'il est dans son réseau domicile.
+Ce service envoie alors un \texttt{Binding Update} de A vers le routeur pour indiquer qu'il est dans son réseau mère.
 Le routeur répond avec un \texttt{Binding Acknowledgment}.
 
 \begin{paquet}
@@ -439,7 +439,7 @@ Durant la phase de découverte, les ping de B vers A ne sont pas visibles.
 Ceci provient du fait que la capture est réalisée depuis A.
 \end{warning}
 
-Après quelques secondes, A avertit le routeur de son réseau domicile avec un \texttt{Binding Update} :
+Après quelques secondes, A avertit le routeur de son réseau mère avec un \texttt{Binding Update} :
 
 \begin{paquet}
 485	355.962	2a01:e35:8a38:6872::1	2a01:e35:8a38:6872:5a8d:9ff:fe14:8900	MIPv6	110	Binding Update
@@ -455,14 +455,14 @@ La réponse revient à nouveau sous forme de \texttt{Binding Acknowledgement} :
 488	356.965	2a01:e35:8a38:6872:5a8d:9ff:fe14:8900	2a01:e35:8a38:6872::1	MIPv6	94	Binding Acknowledgement
 \end{paquet}
 
-Immédiatement, les ping retransmis par le réseau domicile sont visibles, et la réponse de A est transmise :
+Immédiatement, les ping retransmis par le réseau mère sont visibles, et la réponse de A est transmise :
 
 \begin{paquet}
 493	357.601	2a01:e35:8a38:6872:226:b0ff:feed:e94a	2a01:e35:8a38:6872::1	ICMPv6	110	Echo (ping) request id=0x0457, seq=18, hop limit=63 (reply in 494)
 494	357.601	2a01:e35:8a38:6872::1	2a01:e35:8a38:6872:226:b0ff:feed:e94a	ICMPv6	110	Echo (ping) reply id=0x0457, seq=18, hop limit=64 (request in 493)
 \end{paquet}
 
-On notera que la valeur \texttt{hop limit} passe de $64$ à $63$, car le paquet effectue un saut supplémentaire par le routeur du réseau domicile avant d'arriver à A.
+On notera que la valeur \texttt{hop limit} passe de $64$ à $63$, car le paquet effectue un saut supplémentaire par le routeur du réseau mère avant d'arriver à A.
 
 \subsection{Sécurisation}
 
