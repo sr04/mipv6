@@ -1,0 +1,59 @@
+\section{Annexe}
+
+\subsection{Configuration du WiFi}
+
+Bien que nous n'ayons pu faire fonctionner, l'IPv6 en WiFi, voici la configuration utilisée pour obtenir une connexion WiFi opérationnelle en IPv4.
+
+Nous avons choisi de créer un vlan différent des autres pour le WiFi.
+Nous utiliserons le vlan 4 et le réseau WiFi sera visible (\emph{guest-mode}).
+
+\begin{code}
+router(config)#vlan 4
+router(config-vlan)#name VLAN04
+
+router(config)#dot11 ssid wifi
+router(config-ssid)#guest-mode
+router(config-ssid)#vlan 4
+router(config-ssid)#authentication open
+\end{code}
+
+Une fois le SSID créé, nous pouvons activer l'interface radio.
+
+\begin{code}
+router(config)#interface dot11Radio 0
+router(config-if)#ssid WIFI
+router(config-if)#station-role root
+router(config-if)#no shutdown
+router(config-if)#antenna receive diversity
+router(config-if)#antenna transmit diversity
+router(config-if)#no dot11 extension aironet
+\end{code}
+
+Il faut ensuite créer le bridge et configurer l'interface qui correspond à la bande de fréquences WiFi que nous voulons utiliser.
+
+\begin{code}
+router(config)#bridge irb
+router(config)#interface vlan 4
+router(config-if)#bridge-group 1
+router(config)#interface bvi 1
+router(config)#ip address 10.0.1.1 255.255.255.0
+router(config)#interface dot11Radio 0.1
+router(config-subif)#description WIFI VLAN04
+router(config-subif)#encapsulation dot1Q 4 native
+router(config-subif)#no cdp enable
+router(config-subif)#bridge-group 1
+\end{code}
+
+Pour terminer la configuration et rendre le WiFi fonctionnel, il faut configurer le DHCP.
+
+\begin{code}
+router(config)#ip dhcp excluded-address 10.0.1.1 10.0.1.50
+router(config)#ip dhcp pool dpool1
+router(dhcp-config)#network 10.0.1.0 255.255.255.0
+router(dhcp-config)#default-router 10.0.1.1
+router(dhcp-config)#import all
+\end{code}
+
+Il est maintenant possible de se connecter sur le réseau portant le nom \enquote{wifi}.
+Celui-ci est ouvert et non protégé.
+
