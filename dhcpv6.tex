@@ -1,13 +1,15 @@
-\section{DHCPv6}
+\subsection{DHCPv6}
 
 Le DHCPv6 est l’équivalent du procole DHCP de l'IPv4, mais adapté pour l'IPv6.
+
+On peut le voir comme une extension de DHCPv4 puisque les deux sont basés sur le protocole BOOTP. A la différence de DHCPv4 qui a des fonctionnalités limitées, DHCPv6 permet la remise de paramètres de configuration d’un serveur DHCP à un client IPv6. 
+
 C’est un protocole de configuration dynamique.
 Il permet d’attribuer les adresses IPv6. 
+DHCPv6 est utile si l’on souhaite centraliser la distribution d’IP. 
+Par exemple, à l’UTC, on souhaite toujours donner la même IP à un étudiant, peu importe l’endroit où il se trouve. 
 
-Il a été mis en place car IPv6 voulait se débarrasser de la dépendance avec DHCP pour configurer les adresses. 
-Ainsi, les hôtes peuvent maintenant configurer plusieurs adresses eux-mêmes. 
-
-En plus d’être un protocole de configuration, il joue aussi le rôle de mécanisme d’auto configuration au même titre que NDP. 
+\subsubsection{Modes d’opération}
 
 DHCPv6 opére dans plusieurs modes :
 \begin{itemize}
@@ -15,6 +17,8 @@ DHCPv6 opére dans plusieurs modes :
   \item stateful mode : une machine peut configurer son adresse IP avec DHCPv6
   \item DHCPv6-PD: obtention d’un préfixe réseau par un routeur à partir d’un fournisseur de service
 \end{itemize}
+
+\subsubsection{Mécanisme de communication}
 
 \scalefig{images/dhcpv6_1.png}{.7}{Communication client-serveur DHCPv6}
 
@@ -24,10 +28,66 @@ Nous avons les différents types de flags suivants :
   \item m: mode géré c’est à dire que le client doit demander une adresse IP et ne pas en configurer une de manière statique (statelessly)
 \end{itemize}
 
-Il est aussi à noter que les machines s’identifient au serveur DHCP avec le DUID contrairement à IPv4 où on se connecte avec l’adresse MAC. 
-DUID signifie Device Unique IDentifier (identifiant unique de l’appareil). Et chaque participant DHCP en a un. C’est celui-ci qui l’identifie tout au long de la communication.
+\subsubsection{Identification des clients par le serveur}
 
-Enfin, pour communiquer, des messages DHCP sont envoyés; voici  la structure de ces messages: 
+DHCPv6 apporte une nouveauté concernant l’identification des machines. 
+Contrairement à IPv4 où on identifie la machine avec l’adresse MAC (ARP), DCHPv6 utilise le DUID (Device Unique Identifier).
+Chaque participant DHCP en a un, aussi bien les clients que les serveurs. 
+C’est celui-ci qui les identifie tout au long des processus de communication.
+
+\subsubsection{Messages DHCPv6}
+
+Chaque unité d’information du protocole DHCPv6 est représentée par un message. 
+DHCPv6 reprend en fait le mode de fonctionnement du segment TCP: celui-ci a la même structure pour toutes les fonctions de TCP. Ainsi, les messages DHCPv6 ont un format d’en-tête identique. 
 
 \scalefig{images/dhcpv6_2.png}{.5}{Structure des messages DHCPv6}
+
+\begin{itemize}
+	\item msg-type + transaction ID : (codée sur 32 bits) cette partie désigne la fonction de DHCPv6 concernée par l’échange. msg-type désigne le type de message et transaction ID, l’identifiant de la transaction ou de l’échange. msg-type est codé sur 8 bits. 
+
+	\item adresse du serveur : indique l’adresse IPv6 du serveur lors d’un échange DHCP. Cette adresse contient l’adresse de l’interface utilisé par le serveur dans la transaction.
+
+	\item options : sert à faire véhiculer des informations de configurations
+\end{itemize}
+
+
+\subsubsection{Les types de message}
+
+Les types de messages du protocole DHCPv6 sont au nombre de 12. Les voici: 
+
+\begin{itemize}
+	\item Sollicitation DHCP (DHCP Solicit) : C’est le message d’interrogation de présence de serveurs DHCP. Un client émet un tel message pour localiser les serveurs DHCP 
+	\item Annonce DHCP (DHCP Advertise) : c’est un message servant à désigner la présence de serveurs DHCP. Il est émis après émission d’un message de sollicitation de la part d’un client. 
+	\item Requête DHCP (DHCP Request) : c’est un message envoyé par le client (sans adresse) pour demander des paramètres de configurations
+	\item Confirmation DHCP (DHCP Confirm) : c’est un message qui sert à vérifier la validité des paramètres octroyés au client
+	\item  DHCP (DHCP Renew) : comme son nom l’indique, c’est un message de demande de renouvellement (ou de prolongation) de l’adresse IP affectée 
+	\item Ré affectation DHCP (DHCP Rebind) : identique au précédent message à la différence que cette fois-ci la réponse peut venir d’un autre serveur (différent de celui initiateur de l’allocation d’adresse IP)
+	\item Réponse DHCP (DHCP Reply) : c’est un message émis par le serveur après avoir reçu une demande du client. C’est ce message qui contient les paramètres de configuration demandés par le client
+	\item Libération DHCP (DHCP Release) : c’est un message qui indique que le client a libéré une pile d’adresses IP préalablement allouées par le serveur 
+	\item Refus DHCP (DHCP Decline) : c’est un message qui indique qu’une ou plusieurs adresses IP sont déjà occupées 
+	\item Notification de reconfiguration DHCP (DHCP Reconfigure-init) : c’est un message envoyé par le serveur au client pour lui indiquer que ses paramètres de configuration ont été modifiés, contenant donc de nouvelles valeurs 
+	\item Encapsulation relais (Relay-Forward) : c’est le message dans lequel sont encapsulés les messages envoyés par le client au serveur
+	\item Encapsulation serveur (Relay-Reply) : c’est un message généré par le serveur . Ce message sera ensuite extrait par le relais pour le transmettre sur le lien du client
+\end{itemize}
+
+\subsubsection{Options}
+
+Précédemment, nous avons parlé d’options qui contiennent les paramètres de configuration des échanges.  
+Elles se distinguent en : 
+
+\begin{itemize}
+	\item les informations temporaires
+	\item  informations générales
+	\item les informations spécifiques à DHCP
+\end{itemize}
+
+Comme exemple d’options, nous avons :
+
+\begin{itemize} 
+	\item l’association d’identification (liste des adresses IPv6 d’une interface du client)
+	\item serveur de nom de domaine : liste des serveurs DNS autorisés par le client 
+	\item identifiant DHCP : DUID ou identifiant permanent du client
+\end{itemize}
+
+
 
