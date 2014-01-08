@@ -1,0 +1,33 @@
+\section{DHCPv6}
+
+Le DHCPv6 est l’équivalent de la DHCP (IPv4) en IPv6.
+C’est un protocole de configuration dynamique.
+Il permet d’attribuer les adresses IPv6. 
+
+Il a été mis en place car IPv6 voulait se débarrasser de la dépendance avec DHCP pour configurer les adresses. 
+Ainsi, les hôtes peuvent maintenant configurer plusieurs adresses eux-mêmes. 
+
+En plus d’être un protocole de configuration, il joue aussi le rôle de mécanisme d’auto configuration au même titre que NDP. 
+
+DHCPv6 opére dans plusieurs modes :
+\begin{itemize}
+  \item stateless mode: fourniture de serveurs DNS et d’autres services commes les options pour les téléphones SIP
+  \item stateful mode : une machine peut configurer son adresse IP avec DHCPv6
+  \item DHCPv6-PD: obtention d’un préfixe réseau par un routeur à partir d’un fournisseur de service
+\end{itemize}
+
+\scalefig{images/dhcpv6_1.png}{.7}{Communication client-serveur DHCPv6}
+
+Nous avons les différents types de flags suivants : 
+\begin{itemize}
+  \item o : indique qu’il y a d’autres informations à trouver dans le serveur 
+  \item m: mode géré c’est à dire que le client doit demander une adresse IP et ne pas en configurer une de manière statique (statelessly)
+\end{itemize}
+
+Il est aussi à noter que les machines s’identifient au serveur DHCP avec le DUID contrairement à IPv4 où on se connecte avec l’adresse MAC. 
+DUID signifie Device Unique IDentifier (identifiant unique de l’appareil). Et chaque participant DHCP en a un. C’est celui-ci qui l’identifie tout au long de la communication.
+
+Enfin, pour communiquer, des messages DHCP sont envoyés; voici  la structure de ces messages: 
+
+\scalefig{images/dhcpv6_2.png}{.5}{Structure des messages DHCPv6}
+
