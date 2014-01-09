@@ -28,7 +28,7 @@ router(config)#hostname router
 router(config)#ip domain-name emilienkenler.net
 \end{code}
 
-Il est alors d'activer le SSH pour pouvoir se connecter à distance :
+Il est alors possible d'activer le SSH pour pouvoir se connecter à distance :
 
 \begin{code}
 router(config)#ip ssh rsa keypair-name sshkey
@@ -70,6 +70,7 @@ S   ::/0 [2/0]
 \end{code}
 
 La commande suivante permet de vérifier qu'une adresse a bien été assignée :
+
 \begin{code}
 router#sh ipv6 interface FastEthernet 0
   IPv6 is enabled, link-local address is FE80::5A8D:9FF:FE14:8900 
@@ -184,7 +185,7 @@ router(config)#interface FastEthernet 2
 router(config-if)#switchport mode access
 router(config-if)#switchport access vlan 2
 
-router(config)#interface fastEthernet 3
+router(config)#interface FastEthernet 3
 router(config-if)#switchport mode access
 router(config-if)#switchport access vlan 2
 \end{code}
